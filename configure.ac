@@ -9,7 +9,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-AC_CHECK_LIB([SDL], [SDL_Init], , [AC_MSG_ERROR(You need libSDL installed)], -lpthread)
+AC_CHECK_LIB([asound], [snd_pcm_open], , [AC_MSG_ERROR(You need libasound installed)], )
 
 
 AC_OUTPUT(Makefile)
