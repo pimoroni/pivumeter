@@ -1,4 +1,4 @@
-AM_CFLAGS = -g -O2 -W -Wall -lwiringPi `sdl-config --cflags` -DWITH_DEVICE_BLINKT -DWITH_DEVICE_SPEAKER_PHAT
+AM_CFLAGS = -g -O2 -W -Wall -lwiringPi `sdl-config --cflags`
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libpimeter.la
