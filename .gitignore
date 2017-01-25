@@ -34,3 +34,6 @@ autoscan-*.log
 Makefile.in
 ltmain.sh
 .dirstamp
+.libs
+
+*.l[ao]

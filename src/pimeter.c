@@ -32,18 +32,23 @@
 #include "pimeter.h"
 #include <alsa/asoundlib.h>
 
+#ifdef WITH_DEVICE_SCROLLPHAT
+#include "devices/scrollphat.h"
+#endif
+
 #ifdef WITH_DEVICE_BLINKT
 #include "devices/blinkt.h"
 #endif
+
 #ifdef WITH_DEVICE_SPEAKER_PHAT
 #include "devices/speaker-phat.h"
 #endif
 
 #define BAR_WIDTH 70
 /* milliseconds to go from 32767 to 0 */
-#define DECAY_MS 1000
+#define DECAY_MS 200
 /* milliseconds for peak to disappear */
-#define PEAK_MS 800
+#define PEAK_MS 200
 
 #define LED_BRIGHTNESS 255
 
@@ -61,7 +66,7 @@ static int level_enable(snd_pcm_scope_t * scope)
     snd_pcm_scope_get_callback_private(scope);
   level->channels =
     calloc(snd_pcm_meter_get_channels(level->pcm),
-	   sizeof(*level->channels));
+       sizeof(*level->channels));
   if (!level->channels) {
     if (level) free(level); 
     return -ENOMEM;
@@ -143,9 +148,9 @@ static void level_update(snd_pcm_scope_t * scope)
     for (n = size1; n > 0; n--) {
       s = *ptr;
       if (s < 0)
-	s = -s;
+    s = -s;
       if (s > lev)
-	lev = s;
+    lev = s;
       ptr++;
     }
 
@@ -153,17 +158,17 @@ static void level_update(snd_pcm_scope_t * scope)
     for (n = size2; n > 0; n--) {
       s = *ptr;
       if (s < 0)
-	s = -s;
+    s = -s;
       if (s > lev)
-	lev = s;
+    lev = s;
       ptr++;
     }
 
     /* limit the decay */
-    if (lev < l->levelchan) {	  
+    if (lev < l->levelchan) {     
       /* make max_decay go lower with level */
       max_decay_temp =
-	max_decay / (32767 / (l->levelchan));
+    max_decay / (32767 / (l->levelchan));
       lev = l->levelchan - max_decay_temp;
       max_decay_temp = max_decay;
     }
@@ -205,11 +210,11 @@ snd_pcm_scope_ops_t level_ops = {
 
 int snd_pcm_scope_pimeter_open(snd_pcm_t * pcm,
                   const char *name,
-			      unsigned int decay_ms,
-			      unsigned int peak_ms,
+                  unsigned int decay_ms,
+                  unsigned int peak_ms,
                   unsigned int led_brightness,
                   unsigned int bar_reverse,
-			      snd_pcm_scope_t ** scopep)
+                  snd_pcm_scope_t ** scopep)
 {
   snd_pcm_scope_t *scope, *s16;
   snd_pcm_scope_ameter_t *level;
@@ -247,12 +252,31 @@ int snd_pcm_scope_pimeter_open(snd_pcm_t * pcm,
   return 0;
 }
 
+int set_output_device(const char *output_device_name){
+#ifdef WITH_DEVICE_SPEAKER_PHAT
+  if(strcmp(output_device_name, "speaker-phat") == 0){
+    fprintf(stderr, "Using device: speaker-phat\n");
+    output_device = speaker_phat();
+    return 0;
+  }
+#endif
+#ifdef WITH_DEVICE_BLINKT
+  if(strcmp(output_device_name, "blinkt") == 0){
+    fprintf(stderr, "Using device: blinkt\n");
+    output_device = blinkt();
+    return 0;
+  }
+#endif
+  return -1;
+}
+
 int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
-			       snd_config_t * root, snd_config_t * conf)
+                   snd_config_t * root, snd_config_t * conf)
 {
   snd_config_iterator_t i, next;
   snd_pcm_scope_t *scope;
   long decay_ms = -1, peak_ms = -1, led_brightness = -1, bar_reverse = -1;
+  const char *output_device_name = "";
   int err;
 
   num_meters = MAX_METERS;
@@ -267,14 +291,14 @@ int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
       continue;
     if (strcmp(id, "type") == 0)
       continue;
-    /*if (strcmp(id, "bar_width") == 0) {
-      err = snd_config_get_integer(n, &bar_width);
+    if (strcmp(id, "output_device") == 0){
+      err = snd_config_get_string(n, &output_device_name);
       if (err < 0) {
-	SNDERR("Invalid type for %s", id);
-	return -EINVAL;
-      }
-      continue;
-    }*/
+		SNDERR("Invalid type for %", id);
+		return -EINVAL;  
+	  }
+	  continue;
+    }
     if (strcmp(id, "bar_reverse") == 0) {
       err = snd_config_get_integer(n, &bar_reverse);
       if (err < 0) {
@@ -294,16 +318,16 @@ int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
     if (strcmp(id, "decay_ms") == 0) {
       err = snd_config_get_integer(n, &decay_ms);
       if (err < 0) {
-	SNDERR("Invalid type for %s", id);
-	return -EINVAL;
+        SNDERR("Invalid type for %s", id);
+        return -EINVAL;
       }
       continue;
     }
     if (strcmp(id, "peak_ms") == 0) {
       err = snd_config_get_integer(n, &peak_ms);
       if (err < 0) {
-	SNDERR("Invalid type for %s", id);
-	return -EINVAL;
+        SNDERR("Invalid type for %s", id);
+        return -EINVAL;
       }
       continue;
     }
@@ -320,15 +344,27 @@ int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
   if (led_brightness < 0) {
     led_brightness = LED_BRIGHTNESS;
   }
- 
-  output_device = speaker_phat();
+  
+  
+  if (strlen(output_device_name) == 0){
+    fprintf(stderr, "No device specified, defaulting to speaker-phat!\n");
+    output_device_name = "speaker-phat";
+  }
+  
+  if(set_output_device(output_device_name) == -1){
+    SNDERR("Invalid output device! %s", output_device_name);
+    return -EINVAL;
+  }
+  
   output_device.init();
-
-  return snd_pcm_scope_pimeter_open(pcm, name, 
-                		   decay_ms,
-				   peak_ms, 
-				   led_brightness, 
-				   bar_reverse,
-				   &scope);
+  
+  return snd_pcm_scope_pimeter_open(
+                   pcm,
+                   name, 
+                   decay_ms,
+                   peak_ms, 
+                   led_brightness, 
+                   bar_reverse,
+                   &scope);
 
 }
