@@ -101,8 +101,9 @@ static int get_channel_level(int channel, snd_pcm_scope_ameter_t *level, snd_pcm
     snd_pcm_scope_ameter_channel_t *l;
     l = &level->channels[channel];
 
-    ptr = snd_pcm_scope_s16_get_channel_buffer(level->s16, channel) + offset;
 
+    // Iterate through the channel buffer and find the highest level value
+    ptr = snd_pcm_scope_s16_get_channel_buffer(level->s16, channel) + offset;
     for (n = size1; n > 0; n--) {
         s = *ptr;
         if (s < 0) s = -s;
@@ -117,19 +118,18 @@ static int get_channel_level(int channel, snd_pcm_scope_ameter_t *level, snd_pcm
         if (s > lev) lev = s;
         ptr++;
     }
-
+    
     /* limit the decay */
     if (lev < l->levelchan) {     
         /* make max_decay go lower with level */
-        max_decay_temp =
-            max_decay / (32767 / (l->levelchan));
+        max_decay_temp = max_decay / (32767 / (l->levelchan));
         lev = l->levelchan - max_decay_temp;
         max_decay_temp = max_decay;
     }
 
     l->levelchan = lev;
 
-    l->previous= lev;
+    l->previous =lev;
 
     return lev;
 }
@@ -144,6 +144,9 @@ static void level_update(snd_pcm_scope_t * scope)
     unsigned int channels;
     unsigned int ms;
     int max_decay, max_decay_temp;
+
+    int meter_level_l = 0;
+    int meter_level_r = 0; 
 
     size = snd_pcm_meter_get_now(pcm) - level->old;
     if (size < 0){
@@ -164,9 +167,6 @@ static void level_update(snd_pcm_scope_t * scope)
     channels = snd_pcm_meter_get_channels(pcm);
 
     if(channels > 2){channels = 2;}
-
-    int meter_level_l = 0;
-    int meter_level_r = 0; 
 
     meter_level_l = get_channel_level(0, level, offset, size1, size2, max_decay, max_decay_temp);
     meter_level_r = meter_level_l;
@@ -253,6 +253,13 @@ int set_output_device(const char *output_device_name){
     if(strcmp(output_device_name, "blinkt") == 0){
         fprintf(stderr, "Using device: blinkt\n");
         output_device = blinkt();
+        return 0;
+    }
+#endif
+#ifdef WITH_DEVICE_SCROLL_PHAT
+    if(strcmp(output_device_name, "scroll-phat") == 0){
+        fprintf(stderr, "Using device: scroll-phat\n");
+        output_device = scroll_phat();
         return 0;
     }
 #endif

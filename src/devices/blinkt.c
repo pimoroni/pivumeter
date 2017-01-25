@@ -94,10 +94,10 @@ static void blinkt_update(int meter_level_l, int meter_level_r, snd_pcm_scope_am
     }
 
     int brightness = level->led_brightness;
-    int bar = (meter_level / 15000.0f) * (brightness * NUM_PIXELS);
+    int bar = (meter_level / 32767.0f) * (brightness * NUM_PIXELS);
 
-    if(bar < 0) bar = 0;
-    if(bar > (brightness*NUM_PIXELS)) bar = (brightness*NUM_PIXELS);
+    if(bar < 0) {bar = 0;}
+    if(bar > (brightness*NUM_PIXELS)) {bar = (brightness*NUM_PIXELS);}
 
     int led;
     for(led = 0; led < NUM_PIXELS; led++){
