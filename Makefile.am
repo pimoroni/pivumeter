@@ -1,4 +1,4 @@
-AM_CFLAGS = -g -O2 -W -Wall -lwiringPi `sdl-config --cflags`
+AM_CFLAGS = -g -O2 -W -Wall
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libpimeter.la

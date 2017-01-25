@@ -226,7 +226,7 @@ CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"pimeter\" -DPACKAGE_TARNAME=\"pimeter\" -DPACKAGE_VERSION=\"0.44\" -DPACKAGE_STRING=\"pimeter\ 0.44\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"pimeter\" -DVERSION=\"0.44\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_LIBASOUND=1
+DEFS = -DPACKAGE_NAME=\"pimeter\" -DPACKAGE_TARNAME=\"pimeter\" -DPACKAGE_VERSION=\"0.44\" -DPACKAGE_STRING=\"pimeter\ 0.44\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"pimeter\" -DVERSION=\"0.44\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_LIBWIRINGPI=1 -DHAVE_LIBASOUND=1
 DEPDIR = .deps
 DLLTOOL = false
 DSYMUTIL = 
@@ -246,7 +246,7 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lasound 
+LIBS = -lasound -lwiringPi 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
@@ -326,7 +326,7 @@ target_alias =
 top_build_prefix = 
 top_builddir = .
 top_srcdir = .
-AM_CFLAGS = -g -O2 -W -Wall -lwiringPi `sdl-config --cflags`
+AM_CFLAGS = -g -O2 -W -Wall
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libpimeter.la
 libpimeter_la_SOURCES = src/pimeter.c src/devices/blinkt.c src/devices/speaker-phat.c
