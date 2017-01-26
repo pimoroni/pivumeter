@@ -1,10 +1,10 @@
-# Pi Meter
+# Pi VU Meter
 
 ## ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
 
 ### Installing
 
-Currently, you will need to compile the pimeter lib from source, as follows:
+Currently, you will need to compile the pivumeter lib from source, as follows:
 
 #### pre-requisite
 
@@ -17,8 +17,8 @@ sudo apt-get install build-essential autoconf automake libtool libasound2-dev li
 if you haven't done so already, git clone this repository and cd into it:
 
 ```
-git clone https://github.com/pimoroni/pimeter
-cd pimeter
+git clone https://github.com/pimoroni/pivumeter
+cd pivumeter
 ```
 
 #### compiling from source
@@ -40,7 +40,7 @@ sudo make install
 
 ### Options
 
-Pi Meter supports various options in your `/etc/asound.conf`, these include:
+Pi VU Meter supports various options in your `/etc/asound.conf`, these include:
 
 #### output_device
 
@@ -60,8 +60,8 @@ Specify the pixel brightness from 0 to 255
 #### Example
 
 ```
-pcm_scope.pimeter {
-        type pimeter
+pcm_scope.pivumeter {
+        type pivumeter
         decay_ms 500
         peak_ms 400
         brightness 128
