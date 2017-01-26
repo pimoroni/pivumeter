@@ -4,7 +4,15 @@
 
 ### Installing
 
-Currently, you will need to compile the pivumeter lib from source, as follows:
+Currently, you will need to compile the pivumeter lib from source.
+
+You may use our automated setup to do so, specifying the output device the wish to use (see `options` below):
+
+```
+setup.sh blinkt
+```
+
+if you'd rather compile and set things up yourself, read on!
 
 #### pre-requisite
 

@@ -26,7 +26,6 @@ scriptname="pivumeter-setup.sh" # the name of this script
 forcesudo="no" # whether the script requires to be ran with root privileges
 promptreboot="no" # whether the script should always prompt user to reboot
 
-FORCE=$1
 ASK_TO_REBOOT=false
 CURRENT_SETTING=false
 MIN_INSTALL=false
@@ -45,7 +44,7 @@ LOADMOD=/etc/modules
 # function define
 
 confirm() {
-    if [ "$FORCE" == '-y' ]; then
+    if [ "$1" == '-y' ]; then
         true
     else
         read -r -p "$1 [y/N] " response < /dev/tty
@@ -178,7 +177,7 @@ for pkgdep in ${pkgdeplist[@]}; do
     fi
 done
 
-echo -e "\nCompilig $productname..."
+echo -e "\nCompiling $productname..."
 
 aclocal && libtoolize
 autoconf && automake --add-missing
@@ -196,6 +195,14 @@ if [ "$1" != "-y" ]; then
 fi
 
 sudo cp ./dependencies/etc/asound.conf /etc/asound.conf
+
+if [ "$1" == "blinkt" ] || [ "$2" == "blinkt" ]; then
+    sudo sed -i "s|output_device.*$|output_device blinkt|" /etc/asound.conf
+elif [ "$1" == "speaker-phat" ] || [ "$2" == "speaker-phat" ]; then
+    sudo sed -i "s|output_device.*$|output_device speaker-phat|" /etc/asound.conf
+elif [ "$1" == "scroll-phat" ] || [ "$2" == "scroll-phat" ]; then
+    sudo sed -i "s|output_device.*$|output_device scroll-phat|" /etc/asound.conf
+fi
 
 success "\nAll done!\n"
 
