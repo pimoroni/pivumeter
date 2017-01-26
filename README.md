@@ -49,8 +49,9 @@ Specify which device to display the VU meter on.
 Supported devices:
 
 * default (18-segment VU driven by SN3218)
-* blinkt
-* speaker-phat
+* blinkt - Simple amplitude meter through Green->Yellow->Red
+* speaker-phat - Simple amplitude meter
+* scroll-phat - displays 11-band FFT-based EQ
 
 #### brightness
 
