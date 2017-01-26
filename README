@@ -1,0 +1,21 @@
+# Pi Meter
+
+## ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
+
+### Options
+
+Pi Meter supports various options in your `/etc/asound.conf`, these include:
+
+#### output_device
+
+Specify which device to display the VU meter on.
+
+Supported devices:
+
+* default (18-segment VU driven by SN3218)
+* blinkt
+* speaker-phat
+
+#### brightness
+
+Specify the pixel brightness from 0 to 255

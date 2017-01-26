@@ -2,20 +2,39 @@
 
 ## ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
 
-### Requirements
+### Installing
 
-Requires fftw3 and wiringPi.
+Currently, you will need to compile the pimeter lib from source, as follows:
 
-### Building
-
-This project is currently built with autotools madness. You should install automake and autoconf then:
+#### pre-requisite
 
 ```
-libtoolize
-autoconf
-automake --add-missing
-./configure
-make
+sudo apt-get install build-essential autoconf automake libtool libasound2-dev libfftw3-dev wiringpi
+```
+
+#### clone repository
+
+if you haven't done so already, git clone this repository and cd into it:
+
+```
+git clone https://github.com/pimoroni/pimeter
+cd pimeter
+```
+
+#### compiling from source
+
+
+from the top of the repository, run the following to generate the MakeFile:
+
+```
+aclocal && libtoolize
+autoconf && automake --add-missing
+```
+
+then, to compile and install:
+
+```
+./configure && make
 sudo make install
 ```
 
@@ -29,6 +48,7 @@ Specify which device to display the VU meter on.
 
 Supported devices:
 
+* default (18-segment VU driven by SN3218)
 * blinkt - Simple amplitude meter through Green->Yellow->Red
 * speaker-phat - Simple amplitude meter
 * scroll-phat - displays 11-band FFT-based EQ
@@ -36,3 +56,17 @@ Supported devices:
 #### brightness
 
 Specify the pixel brightness from 0 to 255
+
+#### Example
+
+```
+pcm_scope.pimeter {
+        type pimeter
+        decay_ms 500
+        peak_ms 400
+        brightness 128
+        output_device blinkt
+}
+```
+
+a full example of a suitable `asound.conf` file can be found in the `dependencies` directory.

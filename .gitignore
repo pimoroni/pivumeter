@@ -31,6 +31,7 @@ aclocal.m4
 compile
 autoscan.log
 autoscan-*.log
+Makefile
 Makefile.in
 ltmain.sh
 .dirstamp
