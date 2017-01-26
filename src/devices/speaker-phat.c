@@ -3,7 +3,7 @@
 #include <signal.h>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
-#include "../pimeter.h"
+#include "../pivumeter.h"
 
 static int stupid_led_mappings[10] = {0, 1, 2, 4, 6, 8, 10, 12, 14, 16};
 static int i2c = 0;

@@ -1,5 +1,5 @@
 /*
- *   pimeter :  level meter ALSA plugin for Raspberry Pi HATs and pHATs
+ *   pivumeter :  level meter ALSA plugin for Raspberry Pi HATs and pHATs
  *   Copyright (c) 2017 by Phil Howard <phil@pimoroni.com>
  *
  *   Derived from:
@@ -29,7 +29,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include "pimeter.h"
+#include "pivumeter.h"
 #include <alsa/asoundlib.h>
 
 #include "devices/all.h"
@@ -197,7 +197,7 @@ enable:level_enable,
        reset:level_reset,
 };
 
-int snd_pcm_scope_pimeter_open(snd_pcm_t * pcm,
+int snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm,
         const char *name,
         unsigned int decay_ms,
         unsigned int peak_ms,
@@ -266,7 +266,7 @@ int set_output_device(const char *output_device_name){
     return -1;
 }
 
-int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
+int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
         snd_config_t * root, snd_config_t * conf)
 {
     snd_config_iterator_t i, next;
@@ -354,7 +354,7 @@ int _snd_pcm_scope_pimeter_open(snd_pcm_t * pcm, const char *name,
 
     output_device.init();
 
-    return snd_pcm_scope_pimeter_open(
+    return snd_pcm_scope_pivumeter_open(
             pcm,
             name, 
             decay_ms,

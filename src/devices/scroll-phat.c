@@ -7,7 +7,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <fftw3.h>
-#include "../pimeter.h"
+#include "../pivumeter.h"
 
 static int i2c = 0;
 
@@ -28,12 +28,18 @@ static const long fft_max[] = { 12317168L, 7693595L, 5863615L, 4082974L, 5836037
 
 
 static void clear_display(void){
+	unsigned int n;
+	for(n = 0; n < 11; n++){
+		wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00000000);
+	}
+	wiringPiI2CWriteReg8(i2c, 0x0c, 0xff);
 }
 
 static void cleanup(void){
 	fftw_destroy_plan(plan);
 	free(input_buffer);
 	fftw_free(output_buffer);
+	clear_display();
 }
 
 static int init(void){
@@ -73,95 +79,77 @@ static int init(void){
 }
 
 static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t *level){
-    int16_t *ptr, *ptr2;
+    int16_t *ptr_left, *ptr_right;
     snd_pcm_t *pcm = level->pcm;
     snd_pcm_sframes_t size;
-    snd_pcm_uframes_t size1, size2;
+    snd_pcm_uframes_t size1;
     snd_pcm_uframes_t offset, cont;
-    unsigned int channel = 0;
-    unsigned int n;
     
     size = snd_pcm_meter_get_now(pcm) - level->old;
+    
     if (size < 0){
         size += snd_pcm_meter_get_boundary(pcm);
     }
 
     offset = level->old % snd_pcm_meter_get_bufsize(pcm);
     cont = snd_pcm_meter_get_bufsize(pcm) - offset;
+    
     size1 = size;
+    
     if (size1 > cont){
         size1 = cont;
     }
-
-    size2 = size - size1;
     
     unsigned int buffer_index = 0;
     
-    ptr = snd_pcm_scope_s16_get_channel_buffer(level->s16, 0) + offset;
-    ptr2 = snd_pcm_scope_s16_get_channel_buffer(level->s16, 1) + offset;
+    ptr_left = snd_pcm_scope_s16_get_channel_buffer(level->s16, 0) + offset;
+    ptr_right = snd_pcm_scope_s16_get_channel_buffer(level->s16, 1) + offset;
+    
+    unsigned int n;
     for (n = size1; n > 0; n--) {
-        //s = *ptr;
-        input_buffer[buffer_index] = *ptr;
-        if(*ptr2 > input_buffer[buffer_index]){
-			input_buffer[buffer_index] = *ptr2;
+        input_buffer[buffer_index] = *ptr_left;
+        if(*ptr_right > input_buffer[buffer_index]){
+			input_buffer[buffer_index] = *ptr_right;
 		}
 		//input_buffer[buffer_index] *= window[buffer_index];
-		ptr2++;
-        ptr++;
+		ptr_right++;
+        ptr_left++;
         buffer_index++;
         if(buffer_index >= input_size) {break;}
     }
     
     fftw_execute(plan);
-
-	//fprintf(stdout, "%f,", output_buffer[1][0]); // 1=86.12hz?
-	//fprintf(stdout, "%f,", output_buffer[2][0]);
-	
-	//fprintf(stdout, "%f,", output_buffer[400][0]);
 	
 	unsigned int bins[11] = {0,0,0,0,0,0,0,0,0,0,0};
-	unsigned int groupsize = 5; // 33 gives up to 16k hz
+	unsigned int groupsize = 5;
+
 	for(n = 0; n < 11; n++){
-		int x;
+		unsigned int x;
 		double y = 0;
 		for(x = 0; x < groupsize; x++){
-			//double r = output_buffer[(groupsize*n) + x][0];
+			
 			double r = (double) sqrt( pow( output_buffer[ (groupsize*n) + x ][ 0 ], 2 ) + pow( output_buffer[ (groupsize*n) + x ][ 1 ], 2 ) ) /  (double)fft_max[ (groupsize*n) + x ];
 			
 			if(r < 0){r = 0;}
 			if(r > 1.0){r = 1.0;}
-			//y += r;
+			
 			if(r > y){
 			    y = r;
 			}
 		}
 		bins[n] = (unsigned int)(y * 5);
-		//bins[n] = (unsigned int)(y/33.0f);
 		
-		int value = 0b00011111 >> (bins[n] / 1000);
-		if(bins[n] >= 5){
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00011111);
+		unsigned int display = (0b1111100000 >> bins[n]) & 0b00011111;
+		
+		if(level->bar_reverse == 1){
+			display = ((0b0000011111 << bins[n]) >> 5) & 0b00011111;
 		}
-		else if(bins[n] == 4){
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00011110);
-		}
-		else if(bins[n] == 3){
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00011100);
-		}
-		else if(bins[n] == 2){
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00011000);
-		}
-		else if(bins[n] == 1){
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00010000);
-		}
-		else {
-			wiringPiI2CWriteReg8(i2c, 0x1 + n, 0b00000000);
-		}
+		
+		wiringPiI2CWriteReg8(i2c, 0x1 + n, display);
+		
 	}
 	
 	wiringPiI2CWriteReg8(i2c, 0x0c, 0xff);
-	
-	//fprintf(stdout, "%d\n", bins[10]);
 }
 
 device scroll_phat(){
