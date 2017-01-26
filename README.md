@@ -9,7 +9,7 @@ Currently, you will need to compile the pimeter lib from source, as follows:
 #### pre-requisite
 
 ```
-sudo apt-get install build-essential autoconf automake libtool libasound2-dev libfftw3-dev
+sudo apt-get install build-essential autoconf automake libtool libasound2-dev libfftw3-dev wiringpi
 ```
 
 #### clone repository
