@@ -34,7 +34,7 @@ autoconf && automake --add-missing
 then, to compile and install:
 
 ```
-configure && make
+./configure && make
 sudo make install
 ```
 
