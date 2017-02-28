@@ -249,6 +249,13 @@ int set_output_device(const char *output_device_name){
         return 0;
     }
 #endif
+#ifdef WITH_DEVICE_PHAT_BEAT
+    if(strcmp(output_device_name, "phat-beat") == 0){
+        fprintf(stderr, "Using device: phat-beat\n");
+        output_device = phat_beat();
+        return 0;
+    }
+#endif
 #ifdef WITH_DEVICE_BLINKT
     if(strcmp(output_device_name, "blinkt") == 0){
         fprintf(stderr, "Using device: blinkt\n");
@@ -260,6 +267,13 @@ int set_output_device(const char *output_device_name){
     if(strcmp(output_device_name, "scroll-phat") == 0){
         fprintf(stderr, "Using device: scroll-phat\n");
         output_device = scroll_phat();
+        return 0;
+    }
+#endif
+#ifdef WITH_DEVICE_SCROLL_PHAT_HD
+    if(strcmp(output_device_name, "scroll-phat-hd") == 0){
+        fprintf(stderr, "Using device: scroll-phat-hd\n");
+        output_device = scroll_phat_hd();
         return 0;
     }
 #endif
