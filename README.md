@@ -61,7 +61,7 @@ Supported devices:
 * phat-beat - Simple stereo amplitude meter
 * speaker-phat - Simple mono amplitude meter
 * scroll-phat - displays 11-band FFT-based EQ
-* scroll-phat - displays 17-band FFT-based EQ
+* scroll-phat-hd - displays 17-band FFT-based EQ
 
 #### brightness
 
