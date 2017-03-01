@@ -169,7 +169,7 @@ newline
 
 echo "Checking for required packages..."
 
-pkgdeplist=( "build-essential" "autoconf" "automake" "libtool" "libasound2-dev" "libfftw3-dev wiringpi" )
+pkgdeplist=( "build-essential" "autoconf" "automake" "libtool" "libasound2-dev" "libfftw3-dev" "wiringpi" )
 
 for pkgdep in ${pkgdeplist[@]}; do
     if apt_pkg_req "$pkgdep"; then
