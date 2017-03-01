@@ -110,9 +110,9 @@ static void set_level(int meter_level, int brightness, int reverse, int meter){
          *
          */
 
-        if(reverse == 1 || meter == 1){
+        if(reverse == 0 || meter == 1){
             index = 7 - led;
-            if(reverse == 1 && meter == 1){
+            if(reverse == 0 && meter == 1){
 				index = led;
 			}
         }
@@ -131,7 +131,7 @@ static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t 
         pixels[x] = 0;
     }
 	
-	if(reverse == 1){
+	if(reverse == 0){
 		set_level(meter_level_l, brightness, reverse, 1);
 		set_level(meter_level_r, brightness, reverse, 0);	
 	}
