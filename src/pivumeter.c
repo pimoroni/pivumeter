@@ -345,6 +345,9 @@ int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
         return -EINVAL;
     }
 
+    if (bar_reverse < 0) {
+        bar_reverse = 0;
+    }
     if (decay_ms < 0) {
         decay_ms = DECAY_MS;
     }
