@@ -39,6 +39,9 @@
 /* milliseconds for peak to disappear */
 #define PEAK_MS 200
 
+/* Value against which the VU intensity is scaled */
+#define VU_SCALE 32767
+
 #define LED_BRIGHTNESS 255
 
 #define MAX_METERS 2
@@ -118,9 +121,9 @@ static int get_channel_level(int channel, snd_pcm_scope_ameter_t *level, snd_pcm
         if (s > lev) lev = s;
         ptr++;
     }
-    
+
     /* limit the decay */
-    if (lev < l->levelchan) {     
+    if (lev < l->levelchan) {
         /* make max_decay go lower with level */
         max_decay_temp = max_decay / (32767 / (l->levelchan));
         lev = l->levelchan - max_decay_temp;
@@ -203,6 +206,7 @@ int snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm,
         unsigned int peak_ms,
         unsigned int led_brightness,
         unsigned int bar_reverse,
+        unsigned int vu_scale,
         snd_pcm_scope_t ** scopep)
 {
     snd_pcm_scope_t *scope, *s16;
@@ -221,6 +225,7 @@ int snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm,
     level->decay_ms = decay_ms;
     level->peak_ms = peak_ms;
     level->led_brightness = led_brightness;
+    level->vu_scale = vu_scale;
     s16 = snd_pcm_meter_search_scope(pcm, "s16");
     if (!s16) {
         err = snd_pcm_scope_s16_open(pcm, "s16", &s16);
@@ -285,7 +290,7 @@ int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
 {
     snd_config_iterator_t i, next;
     snd_pcm_scope_t *scope;
-    long decay_ms = -1, peak_ms = -1, led_brightness = -1, bar_reverse = -1;
+    long decay_ms = -1, peak_ms = -1, led_brightness = -1, bar_reverse = -1, vu_scale = -1;
     const char *output_device_name = "";
     int err;
 
@@ -325,6 +330,14 @@ int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
             }
             continue;
         }
+        if (strcmp(id, "vu_scale") == 0) {
+            err = snd_config_get_integer(n, &vu_scale);
+            if (err < 0) {
+                SNDERR("Invalid type for %s", id);
+                return -EINVAL;
+            }
+            continue;
+        }
         if (strcmp(id, "decay_ms") == 0) {
             err = snd_config_get_integer(n, &decay_ms);
             if (err < 0) {
@@ -357,6 +370,9 @@ int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
     if (led_brightness < 0) {
         led_brightness = LED_BRIGHTNESS;
     }
+    if (vu_scale < 0) {
+        vu_scale = VU_SCALE;
+    }
 
 
     if (strlen(output_device_name) == 0){
@@ -373,11 +389,12 @@ int _snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm, const char *name,
 
     return snd_pcm_scope_pivumeter_open(
             pcm,
-            name, 
+            name,
             decay_ms,
-            peak_ms, 
-            led_brightness, 
+            peak_ms,
+            led_brightness,
             bar_reverse,
+            vu_scale,
             &scope);
 
 }

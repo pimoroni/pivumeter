@@ -19,6 +19,7 @@ typedef struct _snd_pcm_scope_ameter {
   unsigned int peak_ms;
   unsigned int led_brightness;
   unsigned int bar_reverse;
+  unsigned int vu_scale;
 } snd_pcm_scope_ameter_t;
 
 typedef struct device {
