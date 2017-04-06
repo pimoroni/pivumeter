@@ -24,6 +24,7 @@ typedef struct _snd_pcm_scope_ameter {
 
 typedef struct device {
 	int (*init)(void);
+        void (*close)(void);
 	void (*update)(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t *level);
 } device;
 #endif

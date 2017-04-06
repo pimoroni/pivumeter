@@ -82,6 +82,7 @@ static void level_close(snd_pcm_scope_t * scope)
     snd_pcm_scope_ameter_t *level =
         snd_pcm_scope_get_callback_private(scope);
     if (level) free(level); 
+
 }
 
 static void level_start(snd_pcm_scope_t * scope ATTRIBUTE_UNUSED)
@@ -94,6 +95,8 @@ static void level_start(snd_pcm_scope_t * scope ATTRIBUTE_UNUSED)
 
 static void level_stop(snd_pcm_scope_t * scope)
 {
+
+    output_device.close();
 }
 
 static int get_channel_level(int channel, snd_pcm_scope_ameter_t *level, snd_pcm_uframes_t offset, snd_pcm_uframes_t size1, snd_pcm_uframes_t size2,
@@ -247,6 +250,13 @@ int snd_pcm_scope_pivumeter_open(snd_pcm_t * pcm,
 }
 
 int set_output_device(const char *output_device_name){
+#ifdef WITH_DEVICE_SOCKET
+    if(strcmp(output_device_name, "socket") == 0){
+        fprintf(stderr, "Using device: socket\n");
+        output_device = pivumeter_socket();
+        return 0;
+    }
+#endif
 #ifdef WITH_DEVICE_SPEAKER_PHAT
     if(strcmp(output_device_name, "speaker-phat") == 0){
         fprintf(stderr, "Using device: speaker-phat\n");

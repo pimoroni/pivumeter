@@ -3,3 +3,4 @@
 #include "scroll-phat.h"
 #include "phat-beat.h"
 #include "scroll-phat-hd.h"
+#include "socket.h"
