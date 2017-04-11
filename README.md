@@ -2,6 +2,12 @@
 
 ## ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
 
+This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.
+
+In accordance with this license, we have chosen to publish Pi VU Meter under GPL version 3.0.
+
+Pi VU Meter is Derived from the SDL display version of the ameter ALSA level meter plugin.
+
 ### Installing
 
 Currently, you will need to compile the pivumeter lib from source.
