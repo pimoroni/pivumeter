@@ -19,6 +19,8 @@ except ImportError:
 
 SOCKET_FILE = "/tmp/pivumeter.socket"
 
+running = False
+
 try:
     os.remove(SOCKET_FILE)
 except OSError:
@@ -145,7 +147,10 @@ class VUHandler(socketserver.BaseRequestHandler):
 class VUServer(socketserver.ThreadingUnixStreamServer):
     def __init__(self, address, handler, output_device):
         self.running = False
-        self.output_device = output_device()
+        if isinstance(output_device, OutputDevice):
+            self.output_device = output_device
+        else:
+            self.output_device = output_device()
         socketserver.ThreadingUnixStreamServer.__init__(self, address, handler)
 
     def serve_forever(self):
@@ -163,19 +168,26 @@ class VUServer(socketserver.ThreadingUnixStreamServer):
         log("Shutdown Complete")
 
 def run(output_device):
+    global running
+
     server = VUServer(SOCKET_FILE, VUHandler, output_device)
     thread_server = threading.Thread(target=server.serve_forever)
 
     def shutdown(signum, frame):
+        global running
+
         log("Interrupt Caught: Shutting Down")
         server.shutdown()
         thread_server.join()
+
+        running = False
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
 
     log("Starting Server")
     thread_server.start()
+    running = True
 
 if __name__ == "__main__":
     run(OutputBlinkt)
