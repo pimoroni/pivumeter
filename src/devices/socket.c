@@ -64,12 +64,14 @@ static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t 
 
     //if((connection_fd = accept(socket_fd, (struct sockaddr *) &address, &address_length)) > -1){
 
-    int data[20];
-    memset(&data, 0, sizeof(int) * 20);
+    int packet_size = 20;
+    int data[packet_size];
+    memset(&data, 0, sizeof(int) * packet_size);
     data[0] = meter_level_l;
     data[1] = meter_level_r;
+    data[2] = packet_size - 3; // Number of FFT bins to expect (data length - 3)
 
-    write(socket_fd, (const void *) & data, sizeof(int) * 20);
+    write(socket_fd, (const void *) & data, sizeof(int) * packet_size);
     //write(socket_fd, (const void *) & meter_level_l, sizeof(int));
     //write(socket_fd, (const void *) & meter_level_r, sizeof(int));
 }

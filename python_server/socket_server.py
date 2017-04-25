@@ -16,17 +16,13 @@ try:
 except ImportError:
     import Queue as queue
 
-import blinkt
 
 SOCKET_FILE = "/tmp/pivumeter.socket"
-
 
 try:
     os.remove(SOCKET_FILE)
 except OSError:
     pass
-
-BRIGHTNESS = 255.0
 
 LOG_LEVEL = 0
 
@@ -50,21 +46,29 @@ class OutputDevice(threading.Thread):
          super(OutputDevice, self).__init__()
          self.stop_event = threading.Event()
          self.daemon = True
+         self.setup()
+
+    def setup(self):
+        pass
 
     def display_vu(self, left, right):
+        pass
+
+    def display_fft(self, bins):
         pass
 
     def cleanup(self):
         pass
 
-    def queue(self, item):
-        self.fifo.put(item)
+    def queue(self, left, right, fft_bins=None):
+        self.fifo.put((left, right, fft_bins))
 
     def run(self):
         while not self.stop_event.is_set():
             try:
-                left, right = self.fifo.get(False)
+                left, right, fft_bins = self.fifo.get(False)
                 self.display_vu(left, right)
+                self.display_fft(fft_bins)
                 self.fifo.task_done()
             except queue.Empty:
                 pass
@@ -80,61 +84,31 @@ class OutputDevice(threading.Thread):
             self.cleanup()
             self.join()
 
-class OutputBlinkt(OutputDevice):
-    def __init__(self):
-        self.base_colours = [(0,0,0) for x in range(blinkt.NUM_PIXELS)]
-        self.generate_base_colours(BRIGHTNESS)
-
-        super(OutputBlinkt, self).__init__()
-
-    def generate_base_colours(self, brightness = 255.0):
-        for x in range(blinkt.NUM_PIXELS):
-            self.base_colours[x] = (float(brightness)/blinkt.NUM_PIXELS-1) * x, float(brightness) - ((255/blinkt.NUM_PIXELS-1) * x), 0
-
-    def display_vu(self, left, right):
-        left /= 2000.0
-        right /= 2000.0
-
-        level = max(left, right)
-        level = max(min(level, 8), 0)
-
-        for x in range(blinkt.NUM_PIXELS):
-            val = 0
-
-            if level > 1:
-                val = 1
-            elif level > 0:
-                val = level
-
-            r, g, b = [int(c * val) for c in self.base_colours[x]]
-
-            blinkt.set_pixel(x, r, g, b)
-            level -= 1 
-
-        blinkt.show()
-
-    def cleanup(self):
-        self.display_vu(0, 0)
-
-
 class VUHandler(socketserver.BaseRequestHandler):
-    def get_long(self):
-        data = self.request.recv(4)
-
-        if len(data) < 4:
-            raise ValueError("Insufficient data")
-
-        return struct.unpack("<L", data)[0]
-
     def get_data(self):
-        data = self.request.recv(80)
+        data = self.request.recv(12)
   
-        if len(data) < 80:
-            print("Ugh insufficient data, length: {}".format(len(data)))
-            raise ValueError("Insufficient data")
+        if len(data) < 12:
+            raise ValueError("Insufficient header data")
 
-        return struct.unpack("<LL", data[:8])
-        #return self.get_long(), self.get_long()
+        # Unpack the first 2 longs into left/right amplitude
+        left, right = struct.unpack("<LL", data[:8])
+
+        # Unpack the final long into our FFT bin size
+        bin_size = struct.unpack("<L", data[8:])[0]
+
+        fft_bins = []
+
+        if bin_size > 0:
+            data = self.request.recv(bin_size * 4)
+
+            if len(data) < bin_size * 4:
+                raise ValueError("Insufficient FFT bin data")
+
+            # Unpack <bin_size> longs into our FFT bins
+            fft_bins = list(struct.unpack("<" + "L" * bin_size, data))
+
+        return left, right, fft_bins
 
     def setup(self):
         log("Client connected")
@@ -143,18 +117,18 @@ class VUHandler(socketserver.BaseRequestHandler):
         log("Client disconnected")
 
         # Output a final 0, 0 to clear the device 
-        self.server.output_device.queue((0, 0))
+        self.server.output_device.queue(0, 0)
 
     def handle(self):
         self.request.settimeout(1)
 
         while self.server.running:
             try:
-                left, right = self.get_data()
+                left, right, fft_bins = self.get_data()
             except ValueError: # If insufficient data is received, assume the client has gone away
                 break
 
-            self.server.output_device.queue((left, right))
+            self.server.output_device.queue(left, right, fft_bins)
 
 class VUServer(socketserver.ThreadingUnixStreamServer):
     def __init__(self, address, handler, output_device):
@@ -176,9 +150,8 @@ class VUServer(socketserver.ThreadingUnixStreamServer):
         socketserver.ThreadingUnixStreamServer.shutdown(self)
         log("Shutdown Complete")
 
-
-if __name__ == "__main__":
-    server = VUServer(SOCKET_FILE, VUHandler, OutputBlinkt)
+def run(output_device):
+    server = VUServer(SOCKET_FILE, VUHandler, output_device)
     thread_server = threading.Thread(target=server.serve_forever)
 
     def shutdown(signum, frame):
@@ -191,5 +164,8 @@ if __name__ == "__main__":
 
     log("Starting Server")
     thread_server.start()
+
+if __name__ == "__main__":
+    run(OutputBlinkt)
     signal.pause()
 
