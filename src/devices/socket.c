@@ -63,8 +63,15 @@ static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t 
     //int vu_scale = level->vu_scale;
 
     //if((connection_fd = accept(socket_fd, (struct sockaddr *) &address, &address_length)) > -1){
-    write(socket_fd, (const void *) & meter_level_l, sizeof(int));
-    write(socket_fd, (const void *) & meter_level_r, sizeof(int));
+
+    int data[20];
+    memset(&data, 0, sizeof(int) * 20);
+    data[0] = meter_level_l;
+    data[1] = meter_level_r;
+
+    write(socket_fd, (const void *) & data, sizeof(int) * 20);
+    //write(socket_fd, (const void *) & meter_level_l, sizeof(int));
+    //write(socket_fd, (const void *) & meter_level_r, sizeof(int));
 }
 
 device pivumeter_socket(){

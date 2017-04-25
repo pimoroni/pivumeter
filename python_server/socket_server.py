@@ -8,12 +8,18 @@ import os
 import time
 import threading
 import signal
+import sys
+from datetime import datetime
 
-import phatbeat
+try:
+    import queue
+except ImportError:
+    import Queue as queue
+
+import blinkt
 
 SOCKET_FILE = "/tmp/pivumeter.socket"
 
-base_colours = [(0,0,0) for x in range(8)]
 
 try:
     os.remove(SOCKET_FILE)
@@ -22,52 +28,97 @@ except OSError:
 
 BRIGHTNESS = 255.0
 
-def generate_base_colours(brightness = 255.0):
-    for x in range(phatbeat.CHANNEL_PIXELS):
-        base_colours[x] = (float(brightness)/phatbeat.CHANNEL_PIXELS-1) * x, float(brightness) - ((255/phatbeat.CHANNEL_PIXELS-1) * x), 0
+LOG_LEVEL = 0
 
-def update_vu():
-    running = True
-    while running:
-        display_vu(left, right)
+LOG_INFO = 0
+LOG_WARN = 1
+LOG_FAIL = 2
+LOG_DEBUG = 3
 
-def display_vu(left, right):
-    left /= 2000.0
-    right /= 2000.0
+def log(msg, level=LOG_INFO):
+    if level < LOG_LEVEL: return
 
-    left = max(min(left, 8),0)
-    right = max(min(right, 8),0)
+    sys.stdout.write(str(datetime.now()))
+    sys.stdout.write(": ")
+    sys.stdout.write(msg)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
-    for x in range(phatbeat.CHANNEL_PIXELS):
-        val = 0
+class OutputDevice(threading.Thread):
+    def __init__(self):
+         self.fifo = queue.Queue()
+         super(OutputDevice, self).__init__()
+         self.stop_event = threading.Event()
+         self.daemon = True
 
-        if left > 1:
-            val = 1
-        elif left > 0:
-            val = left
+    def display_vu(self, left, right):
+        pass
 
-        r, g, b = [int(c * val) for c in base_colours[x]]
+    def cleanup(self):
+        pass
 
-        phatbeat.set_pixel(x, r, g, b, channel=1)
-        left -= 1 
+    def queue(self, item):
+        self.fifo.put(item)
 
-        val = 0
+    def run(self):
+        while not self.stop_event.is_set():
+            try:
+                left, right = self.fifo.get(False)
+                self.display_vu(left, right)
+                self.fifo.task_done()
+            except queue.Empty:
+                pass
 
-        if right > 1:
-            val = 1
-        elif right > 0:
-            val = right
+    def start(self):
+        if not self.isAlive():
+            self.stop_event.clear()
+            super(OutputDevice, self).start()
 
-        r, g, b = [int(c * val) for c in base_colours[x]]
+    def stop(self):
+        if self.isAlive():
+            self.stop_event.set()
+            self.cleanup()
+            self.join()
 
-        phatbeat.set_pixel(7-x, r, g, b, channel=0)
-        right -= 1
+class OutputBlinkt(OutputDevice):
+    def __init__(self):
+        self.base_colours = [(0,0,0) for x in range(blinkt.NUM_PIXELS)]
+        self.generate_base_colours(BRIGHTNESS)
 
-    phatbeat.show()
+        super(OutputBlinkt, self).__init__()
+
+    def generate_base_colours(self, brightness = 255.0):
+        for x in range(blinkt.NUM_PIXELS):
+            self.base_colours[x] = (float(brightness)/blinkt.NUM_PIXELS-1) * x, float(brightness) - ((255/blinkt.NUM_PIXELS-1) * x), 0
+
+    def display_vu(self, left, right):
+        left /= 2000.0
+        right /= 2000.0
+
+        level = max(left, right)
+        level = max(min(level, 8), 0)
+
+        for x in range(blinkt.NUM_PIXELS):
+            val = 0
+
+            if level > 1:
+                val = 1
+            elif level > 0:
+                val = level
+
+            r, g, b = [int(c * val) for c in self.base_colours[x]]
+
+            blinkt.set_pixel(x, r, g, b)
+            level -= 1 
+
+        blinkt.show()
+
+    def cleanup(self):
+        self.display_vu(0, 0)
 
 
 class VUHandler(socketserver.BaseRequestHandler):
-    def get_value(self):
+    def get_long(self):
         data = self.request.recv(4)
 
         if len(data) < 4:
@@ -75,47 +126,70 @@ class VUHandler(socketserver.BaseRequestHandler):
 
         return struct.unpack("<L", data)[0]
 
+    def get_data(self):
+        data = self.request.recv(80)
+  
+        if len(data) < 80:
+            print("Ugh insufficient data, length: {}".format(len(data)))
+            raise ValueError("Insufficient data")
+
+        return struct.unpack("<LL", data[:8])
+        #return self.get_long(), self.get_long()
+
+    def setup(self):
+        log("Client connected")
+
+    def finish(self):
+        log("Client disconnected")
+
+        # Output a final 0, 0 to clear the device 
+        self.server.output_device.queue((0, 0))
+
     def handle(self):
-        while server.running:
+        self.request.settimeout(1)
+
+        while self.server.running:
             try:
-                left = self.get_value()
-                right = self.get_value()
-            except ValueError:
+                left, right = self.get_data()
+            except ValueError: # If insufficient data is received, assume the client has gone away
                 break
 
-            display_vu(left, right)
+            self.server.output_device.queue((left, right))
 
-        print("Finished...")
-        display_vu(0, 0)
-        return
+class VUServer(socketserver.ThreadingUnixStreamServer):
+    def __init__(self, address, handler, output_device):
+        self.running = False
+        self.output_device = output_device()
+        socketserver.ThreadingUnixStreamServer.__init__(self, address, handler)
 
-server = socketserver.ThreadingUnixStreamServer(SOCKET_FILE, VUHandler)
+    def serve_forever(self):
+        log("Serve called...")
+        self.running = True
+        self.output_device.start()
+        socketserver.ThreadingUnixStreamServer.serve_forever(self)
+
+    def shutdown(self):
+        self.running = False
+        log("Stopping Output Device")
+        self.output_device.stop()
+        log("Stopping Server")
+        socketserver.ThreadingUnixStreamServer.shutdown(self)
+        log("Shutdown Complete")
+
 
 if __name__ == "__main__":
-    #t_phatbeat = threading.Thread(target=update_vu)
-    #t_phatbeat.daemon = True
-    #t_phatbeat.start()
-
-    generate_base_colours()
+    server = VUServer(SOCKET_FILE, VUHandler, OutputBlinkt)
+    thread_server = threading.Thread(target=server.serve_forever)
 
     def shutdown(signum, frame):
-        print("Shutting down...")
-        server.running = False
+        log("Interrupt Caught: Shutting Down")
         server.shutdown()
+        thread_server.join()
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
 
-    thread_server = threading.Thread(target=server.serve_forever)
+    log("Starting Server")
     thread_server.start()
-    server.running = True
-    while server.running:
-        pass
-    thread_server.join()
-    #while True:
-    #    for x in range(1000):
-    #        display_vu(x * 16, x * 16)
-    #        time.sleep(0.001)
-    #    for x in reversed(range(1000)):
-    #        display_vu(x * 16, x * 16)
-    #        time.sleep(0.001)
+    signal.pause()
+
