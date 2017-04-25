@@ -65,13 +65,25 @@ class OutputDevice(threading.Thread):
 
     def run(self):
         while not self.stop_event.is_set():
-            try:
-                left, right, fft_bins = self.fifo.get(False)
+            left, right, fft_bins = None, None, None
+
+            while True:
+                try:
+                    left, right, fft_bins = self.fifo.get(False)
+                    self.fifo.task_done()
+                except queue.Empty:
+                    break
+
+            if left is not None:
                 self.display_vu(left, right)
-                self.display_fft(fft_bins)
-                self.fifo.task_done()
-            except queue.Empty:
-                pass
+                if fft_bins is not None: self.display_fft(fft_bins)
+            #try:
+            #    left, right, fft_bins = self.fifo.get(False)
+            #    self.display_vu(left, right)
+            #    self.display_fft(fft_bins)
+            #    self.fifo.task_done()
+            #except queue.Empty:
+            #    pass
 
     def start(self):
         if not self.isAlive():
