@@ -93,10 +93,7 @@ class OutputDevice(threading.Thread):
 
 class VUHandler(socketserver.BaseRequestHandler):
     def get_data(self):
-        try:
-            data = self.request.recv(12)
-        except:
-            return 0, 0, []
+        data = self.request.recv(12)
   
         if len(data) < 12:
             raise ValueError("Insufficient header data")
@@ -130,8 +127,8 @@ class VUHandler(socketserver.BaseRequestHandler):
         self.server.output_device.queue(0, 0)
 
     def handle(self):
-        self.request.settimeout(10)
-        self.request.setblocking(False)
+        self.request.settimeout(0.5)
+        #self.request.setblocking(False)
 
         while self.server.running:
             try:
@@ -139,6 +136,11 @@ class VUHandler(socketserver.BaseRequestHandler):
             except ValueError: # If insufficient data is received, assume the client has gone away
                 break
             except socketserver.socket.timeout:
+                break
+            except socketserver.socket.error as e:
+                if e.errno == 11:
+                    continue
+
                 break
 
             self.server.output_device.queue(left, right, fft_bins)
