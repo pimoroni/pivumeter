@@ -2,7 +2,7 @@
 """
 A basic implementaton of a Pi VU Meter python server, for use with the "socket" mode.
 
-To create a server for a specific HAT or pHAT you must derive from the socket_server.OutputDevice class.
+To create a server for a specific HAT or pHAT you must derive from the pivumeter.OutputDevice class.
 
 This class includes three methods you should override:
 
@@ -13,14 +13,14 @@ This class includes three methods you should override:
 The left and right channel values passed into `display_vu` are unscaled. It is your responsibility to
 scale them to a sensible range for display on your HAT or pHAT.
 """
-import socket_server
+import pivumeter
 import signal
 import blinkt
-import speakerphat
+#import speakerphat
 
 BRIGHTNESS = 255
 
-class OutputBlinkt(socket_server.OutputDevice):
+class OutputBlinkt(pivumeter.OutputDevice):
     def setup(self):
         self.base_colours = [(0,0,0) for x in range(blinkt.NUM_PIXELS)]
         self.generate_base_colours(BRIGHTNESS)
@@ -50,14 +50,14 @@ class OutputBlinkt(socket_server.OutputDevice):
             r, g, b = [int(c * val) for c in self.base_colours[x]]
 
             blinkt.set_pixel(x, r, g, b)
-            speakerphat.set_led(x, int(val * 255.0))
+            #speakerphat.set_led(x, int(val * 255.0))
             level -= 1 
 
         blinkt.show()
-        speakerphat.show()
+        #speakerphat.show()
 
     def cleanup(self):
         self.display_vu(0, 0)
 
-socket_server.run(OutputBlinkt)
+pivumeter.run(OutputBlinkt)
 signal.pause()

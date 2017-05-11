@@ -2,7 +2,7 @@
 """
 A basic implementaton of a Pi VU Meter python server, for use with the "socket" mode.
 
-To create a server for a specific HAT or pHAT you must derive from the socket_server.OutputDevice class.
+To create a server for a specific HAT or pHAT you must derive from the pivumeter.OutputDevice class.
 
 This class includes three methods you should override:
 
@@ -13,12 +13,12 @@ This class includes three methods you should override:
 The left and right channel values passed into `display_vu` are unscaled. It is your responsibility to
 scale them to a sensible range for display on your HAT or pHAT.
 """
-import socket_server
+import pivumeter
 import signal
 import scrollphathd
 
 
-class OutputScrollPhatHD(socket_server.OutputDevice):
+class OutputScrollPhatHD(pivumeter.OutputDevice):
     def setup(self):
         pass
 
@@ -32,5 +32,5 @@ class OutputScrollPhatHD(socket_server.OutputDevice):
     def cleanup(self):
         pass
 
-socket_server.run(OutputScrollPhatHD)
+pivumeter.run(OutputScrollPhatHD)
 signal.pause()

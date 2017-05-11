@@ -79,13 +79,6 @@ class OutputDevice(threading.Thread):
             if left is not None:
                 self.display_vu(left, right)
                 if fft_bins is not None: self.display_fft(fft_bins)
-            #try:
-            #    left, right, fft_bins = self.fifo.get(False)
-            #    self.display_vu(left, right)
-            #    self.display_fft(fft_bins)
-            #    self.fifo.task_done()
-            #except queue.Empty:
-            #    pass
 
     def start(self):
         if not self.isAlive():
@@ -100,7 +93,10 @@ class OutputDevice(threading.Thread):
 
 class VUHandler(socketserver.BaseRequestHandler):
     def get_data(self):
-        data = self.request.recv(12)
+        try:
+            data = self.request.recv(12)
+        except:
+            return 0, 0, []
   
         if len(data) < 12:
             raise ValueError("Insufficient header data")
@@ -142,7 +138,7 @@ class VUHandler(socketserver.BaseRequestHandler):
                 left, right, fft_bins = self.get_data()
             except ValueError: # If insufficient data is received, assume the client has gone away
                 break
-            except socket.timeout:
+            except socketserver.socket.timeout:
                 break
 
             self.server.output_device.queue(left, right, fft_bins)

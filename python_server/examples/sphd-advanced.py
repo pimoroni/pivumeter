@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket_server
+import pivumeter
 import signal
 import scrollphathd
 import threading
@@ -11,7 +11,7 @@ try:
 except ImportError:
     import Queue as queue
 
-class OutputScrollPhatHD(socket_server.OutputDevice):
+class OutputScrollPhatHD(pivumeter.OutputDevice):
     def __init__(self):
         super(OutputScrollPhatHD, self).__init__()
 
@@ -77,10 +77,10 @@ Press Ctrl+C then hit Enter to exit.
 
 output_device = OutputScrollPhatHD()
 
-socket_server.run(output_device)
+pivumeter.run(output_device)
 
 try:
-    while socket_server.running:
+    while pivumeter.running:
         output_device.messages.put(raw_input("\n\nYour message: "))
         time.sleep(1)
 except KeyboardInterrupt:
