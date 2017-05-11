@@ -172,7 +172,7 @@ def run(output_device):
     global running
 
     server = VUServer(SOCKET_FILE, VUHandler, output_device)
-    os.chmod(SOCKET_FILE,0777)
+    os.chmod(SOCKET_FILE,0o777)
     thread_server = threading.Thread(target=server.serve_forever)
 
     def shutdown(signum, frame):
