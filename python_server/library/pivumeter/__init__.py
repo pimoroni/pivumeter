@@ -127,7 +127,7 @@ class VUHandler(socketserver.BaseRequestHandler):
         self.server.output_device.queue(0, 0)
 
     def handle(self):
-        self.request.settimeout(0.5)
+        self.request.settimeout(10)
         #self.request.setblocking(False)
 
         while self.server.running:
