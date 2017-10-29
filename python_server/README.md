@@ -13,7 +13,7 @@ setup.sh socket
 ```
 You can also compile and set up thing yourself - just follow [this guide](../README.md#installing) but change the `output-device` to `socket`.
 
-After that you need to install pytjon pivumeter library.
+After that you need to install python pivumeter library.
 Just go to the `pivumeter/python_server/library` folder and run
 ```
 sudo python setup.py install
