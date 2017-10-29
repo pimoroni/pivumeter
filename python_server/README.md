@@ -9,7 +9,7 @@ Currently to run this code you will need to clone the `devel` branch of Pi VU Me
 
 You may use our automated setup to do so, specifying the output device to `socket`
 ```
-setup.sh blinkt
+setup.sh socket
 ```
 You can also compile and set up thing yourself - just follow [this guide](../README.md#installing) but change the `output-device` to `socket`.
 
