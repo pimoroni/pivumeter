@@ -1,0 +1,19 @@
+Source: pivumeter
+Maintainer: Nico Kaiser <nico@kaiser.me>
+Section: sound
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends:
+ debhelper (>= 10),
+ autoconf,
+ automake,
+ libtool,
+ libasound2-dev,
+ libfftw3-dev,
+ wiringpi
+Homepage: https://github.com/pimoroni/pivumeter
+
+Package: pivumeter
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libasound2, libfftw3-double3, wiringpi
+Description: ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
