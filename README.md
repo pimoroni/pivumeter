@@ -73,6 +73,10 @@ Supported devices:
 
 Specify the pixel brightness from 0 to 255
 
+#### bar_reverse
+
+Mirror the bar direction.
+
 #### Example
 
 ```
@@ -81,6 +85,7 @@ pcm_scope.pivumeter {
         decay_ms 500
         peak_ms 400
         brightness 128
+        bar_reverse 0
         output_device blinkt
 }
 ```
