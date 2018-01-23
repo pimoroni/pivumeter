@@ -62,7 +62,6 @@ Specify which device to display the VU meter on.
 
 Supported devices:
 
-* default (18-segment VU driven by SN3218)
 * blinkt - Simple amplitude meter through Green->Yellow->Red
 * phat-beat - Simple stereo amplitude meter
 * speaker-phat - Simple mono amplitude meter
