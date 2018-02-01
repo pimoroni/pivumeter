@@ -95,8 +95,9 @@ static void level_start(snd_pcm_scope_t * scope ATTRIBUTE_UNUSED)
 
 static void level_stop(snd_pcm_scope_t * scope)
 {
-
-    output_device.close();
+    if(output_device.close){
+        output_device.close();
+    }
 }
 
 static int get_channel_level(int channel, snd_pcm_scope_ameter_t *level, snd_pcm_uframes_t offset, snd_pcm_uframes_t size1, snd_pcm_uframes_t size2,
