@@ -85,19 +85,20 @@ static int init(void){
 }
 
 static void set_level(int meter_level, int brightness, int reverse, int vu_scale, int meter){
-    int bar = (meter_level / (float)(vu_scale)) * (brightness * (NUM_PIXELS/2));
+    int bar = meter_level;
+    if(bar > vu_scale){
+        bar = vu_scale;
+    }
+    int step = vu_scale / (NUM_PIXELS / 2);
     int offset = meter * 8;
-
-    if(bar < 0) {bar = 0;}
-    if(bar > (brightness*(NUM_PIXELS/2))) {bar = (brightness*(NUM_PIXELS/2));}
 
     int led;
     for(led = 0; led < (NUM_PIXELS/2); led++){
         int val = 0, index = led;
 
-        if(bar > brightness){
-            val = brightness;
-            bar -= brightness;
+        if(bar > step){
+            val = step;
+            bar -= step;
         }
         else if(bar > 0){
             val = bar;
@@ -113,9 +114,11 @@ static void set_level(int meter_level, int brightness, int reverse, int vu_scale
         if(reverse == 0 || meter == 1){
             index = 7 - led;
             if(reverse == 0 && meter == 1){
-				index = led;
-			}
+                index = led;
+            }
         }
+
+        val = (val * brightness) / step;
 
         set_pixel(offset + index, (int)(val*(led/7.0f)), (int)(val-(val*(led/7.0f))), 0, 16);
     }
@@ -146,9 +149,15 @@ static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t 
     show();
 }
 
+static void phatbeat_close(void){
+    clear_display();
+    return;
+}
+
 device phat_beat(){
     struct device _phat_beat;
     _phat_beat.init = &init;
     _phat_beat.update = &update;
+    _phat_beat.close = &phatbeat_close;
     return _phat_beat;
 }
