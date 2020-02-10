@@ -263,6 +263,13 @@ int set_output_device(const char *output_device_name){
         return 0;
     }
 #endif
+#ifdef WITH_DEVICE_MCP4725VU
+    if(strcmp(output_device_name, "mcp4725vu") == 0){
+        fprintf(stderr, "Using device: mcp4725vu\n");
+        output_device = mcp4725vu();
+        return 0;
+    }
+#endif
 #ifdef WITH_DEVICE_SCROLL_PHAT
     if(strcmp(output_device_name, "scroll-phat") == 0){
         fprintf(stderr, "Using device: scroll-phat\n");

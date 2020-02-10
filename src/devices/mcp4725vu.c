@@ -11,7 +11,7 @@ static void zero_display(void){
     analogWrite(100,0);
 }
 
-static int blinkt_init(void){
+static int mcp4725vu_init(void){
     mcp4725Setup(100,MCP4725);
     zero_display();
 
@@ -28,9 +28,9 @@ static void meter_update(int meter_level_l, int meter_level_r, snd_pcm_scope_ame
 
 }
 
-device blinkt(){
-    struct device _blinkt;
-    _blinkt.init = &blinkt_init;
-    _blinkt.update = &meter_update;
-    return _blinkt;
+device mcp4725vu(){
+    struct device _mcp4725vu;
+    _mcp4725vu.init = &mcp4725vu_init;
+    _mcp4725vu.update = &meter_update;
+    return _mcp4725vu;
 }

@@ -1,3 +1,4 @@
+#include "mcp4725vu.h"
 #include "blinkt.h"
 #include "speaker-phat.h"
 #include "scroll-phat.h"
