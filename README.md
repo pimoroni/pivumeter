@@ -1,3 +1,5 @@
+:warning: This project is EOL and intended to be replaced by a Pulse Audio version. See: https://github.com/pimoroni/pivumeter-pulseaudio
+
 # Pi VU Meter
 
 ## ALSA Plugin to display a VU meter on various Raspberry Pi add-ons
