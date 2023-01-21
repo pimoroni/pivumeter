@@ -84,26 +84,27 @@ static int init(void){
     return 0;
 }
 
-static void set_level(int meter_level, int brightness, int reverse, int meter){
-    int bar = (meter_level / 32767.0f) * (brightness * (NUM_PIXELS/2));
+static void set_level(int meter_level, int brightness, int reverse, int vu_scale, int meter){
+    int bar = meter_level;
+    if(bar > vu_scale){
+        bar = vu_scale;
+    }
+    int step = vu_scale / (NUM_PIXELS / 2);
     int offset = meter * 8;
-
-    if(bar < 0) {bar = 0;}
-    if(bar > (brightness*(NUM_PIXELS/2))) {bar = (brightness*(NUM_PIXELS/2));}
 
     int led;
     for(led = 0; led < (NUM_PIXELS/2); led++){
         int val = 0, index = led;
 
-        if(bar > brightness){
-            val = brightness;
-            bar -= brightness;
+        if(bar > step){
+            val = step;
+            bar -= step;
         }
         else if(bar > 0){
             val = bar;
             bar = 0;
         }
-        
+
         /*
          *  0  1  2  3  4  5  6  7
          * 15 14 13 12 11 10  9  8
@@ -113,9 +114,11 @@ static void set_level(int meter_level, int brightness, int reverse, int meter){
         if(reverse == 0 || meter == 1){
             index = 7 - led;
             if(reverse == 0 && meter == 1){
-				index = led;
-			}
+                index = led;
+            }
         }
+
+        val = (val * brightness) / step;
 
         set_pixel(offset + index, (int)(val*(led/7.0f)), (int)(val-(val*(led/7.0f))), 0, 16);
     }
@@ -126,27 +129,35 @@ static void update(int meter_level_l, int meter_level_r, snd_pcm_scope_ameter_t 
 
     int brightness = level->led_brightness;
     int reverse = level->bar_reverse;
-    
+    int vu_scale = level->vu_scale;
+
+
     for(x = 0; x < NUM_PIXELS; x++){
         pixels[x] = 0;
     }
-	
-	if(reverse == 0){
-		set_level(meter_level_l, brightness, reverse, 1);
-		set_level(meter_level_r, brightness, reverse, 0);	
-	}
-	else
-	{
-		set_level(meter_level_l, brightness, reverse, 0);
-		set_level(meter_level_r, brightness, reverse, 1);
-	}
-	
+
+    if(reverse == 0){
+        set_level(meter_level_l, brightness, reverse, vu_scale, 1);
+        set_level(meter_level_r, brightness, reverse, vu_scale, 0);
+    }
+    else
+    {
+        set_level(meter_level_l, brightness, reverse, vu_scale, 0);
+        set_level(meter_level_r, brightness, reverse, vu_scale, 1);
+    }
+
     show();
+}
+
+static void phatbeat_close(void){
+    clear_display();
+    return;
 }
 
 device phat_beat(){
     struct device _phat_beat;
     _phat_beat.init = &init;
     _phat_beat.update = &update;
+    _phat_beat.close = &phatbeat_close;
     return _phat_beat;
 }
